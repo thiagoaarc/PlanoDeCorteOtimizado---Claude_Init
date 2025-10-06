@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "timestamp": "20251005_014844",
+  "description": "",
+  "data": {
+    "chapas": [
+      {
+        "id": "C1",
+        "w": 1000,
+        "h": 1000,
+        "qtd": 1,
+        "rebarba": 0,
+        "custo": 0,
+        "defeitos": [],
+        "cliente": "",
+        "lote": "",
+        "cor": "",
+        "obs": ""
+      }
+    ],
+    "pecas": [
+      {
+        "id": "P1",
+        "shape": "rect",
+        "params": {
+          "w": 100,
+          "h": 200
+        },
+        "qtd": 2,
+        "prioridade": 0,
+        "cliente": "",
+        "lote": "",
+        "cor": "",
+        "obs": ""
+      },
+      {
+        "id": "P2",
+        "shape": "circ",
+        "params": {
+          "raio": 50
+        },
+        "qtd": 3,
+        "prioridade": 0,
+        "cliente": "",
+        "lote": "",
+        "cor": "",
+        "obs": ""
+      }
+    ],
+    "layouts": [
+      [
+        {
+          "id": "P1_1",
+          "x": 0,
+          "y": 0,
+          "w": 100,
+          "h": 200,
+          "angulo": 0,
+          "peca": 

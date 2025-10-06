@@ -1,0 +1,30 @@
+[
+  {
+    "id": "P1",
+    "shape": "rect",
+    "params": {
+      "w": 900.0,
+      "h": 500.0
+    },
+    "qtd": 1,
+    "prioridade": 0,
+    "cliente": "",
+    "lote": "",
+    "cor": "",
+    "obs": ""
+  },
+  {
+    "id": "2",
+    "shape": "rect",
+    "params": {
+      "w": 500.0,
+      "h": 10.0
+    },
+    "qtd": 16,
+    "prioridade": 0,
+    "cliente": "",
+    "lote": "",
+    "cor": "",
+    "obs": ""
+  }
+]

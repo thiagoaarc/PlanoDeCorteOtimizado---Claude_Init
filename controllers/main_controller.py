@@ -4,10 +4,11 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from PyQt6.QtCore import QObject, pyqtSignal
+from models.app_model import AppModel
+from services.data_service import DataService
 
 from data.version_control import VersionControl
-from models import AppModel, Chapa, Defeito, LayoutResult, OptimizationSummary, Peca
-from services.data_service import DataService
+from models import Chapa, Defeito, LayoutResult, OptimizationSummary, Peca
 from services.export import export_to_pdf
 from services.export_svg import export_to_svg
 from services.optimization import AVAILABLE_ALGORITHMS, evaluate_algorithms, run_algorithm
@@ -19,10 +20,10 @@ class MainController(QObject):
 
     error_occurred = pyqtSignal(str)
 
-    def __init__(self) -> None:
+    def __init__(self, model: AppModel, data_service: DataService) -> None:
         super().__init__()
-        self.model = AppModel()
-        self._data_service = DataService()
+        self.model = model
+        self.data_service = data_service
         self._version_control = VersionControl()
         self._logger = CustomLogger().logger
         self._last_summary: Optional[OptimizationSummary] = None
@@ -64,7 +65,7 @@ class MainController(QObject):
             "chapas": [self._chapa_to_dict(chapa) for chapa in self.model.chapas],
             "pecas": [self._peca_to_dict(peca) for peca in self.model.pecas],
         }
-        target = self._data_service.save_inventory(data, destination)
+        target = self.data_service.save_inventory(data, destination)
         try:
             self._version_control.save_version(data, description=str(Path(target).name))
         except Exception as exc:  # pragma: no cover - controle auxiliar
@@ -72,7 +73,7 @@ class MainController(QObject):
         return target
 
     def load_inventory(self, source: Optional[str | Path] = None) -> None:
-        payload = self._data_service.load_inventory(source)
+        payload = self.data_service.load_inventory(source)
         chapas = [self._build_chapa(item) for item in payload.get("chapas", [])]
         pecas = [self._build_peca(item) for item in payload.get("pecas", [])]
         self.model.set_chapas(chapas)
@@ -86,16 +87,19 @@ class MainController(QObject):
         return AVAILABLE_ALGORITHMS
 
     def optimize(self, algorithm_key: str, kerf: float = 0.0, margin: float = 0.0,\n                 allow_rotation: bool = True, priority_weight: float = 0.0) -> None:
-        if not self.model.chapas or not self.model.pecas:
-            self.model.clone_with_status("Add sheets and pieces before running optimization")
-            return
-        summary, layouts = run_algorithm(\n            algorithm_key,\n            self.model.chapas,\n            self.model.pecas,\n            allow_rotation=allow_rotation,\n            kerf=kerf,\n            margin=margin,\n            priority_weight=priority_weight,\n        )
-        self._last_summary = summary
-        self.model.set_layouts(layouts, summary)
-        self.model.clone_with_status(
-            f"Optimization completed using {algorithm_key.upper()} | "
-            f"Utilization {summary.total_utilization:.1f}% | Coverage {summary.piece_coverage:.1f}%"
-        )
+        try:
+            if not self.model.chapas or not self.model.pecas:
+                self.model.clone_with_status("Add sheets and pieces before running optimization")
+                return
+            summary, layouts = run_algorithm(\n                algorithm_key,\n                self.model.chapas,\n                self.model.pecas,\n                allow_rotation=allow_rotation,\n                kerf=kerf,\n                margin=margin,\n                priority_weight=priority_weight,\n            )
+            self._last_summary = summary
+            self.model.set_layouts(layouts, summary)
+            self.model.clone_with_status(
+                f"Optimization completed using {algorithm_key.upper()} | "
+                f"Utilization {summary.total_utilization:.1f}% | Coverage {summary.piece_coverage:.1f}%"
+            )
+        except Exception as e:
+            self.error_occurred.emit(f"Erro na otimização: {str(e)}")
 
     def evaluate_best(self, kerf: float = 0.0, margin: float = 0.0,\n                      allow_rotation: bool = True, priority_weight: float = 0.0) -> Optional[OptimizationSummary]:
         rankings = evaluate_algorithms(\n            self.model.chapas,\n            self.model.pecas,\n            allow_rotation=allow_rotation,\n            kerf=kerf,\n            margin=margin,\n            priority_weight=priority_weight,\n        )

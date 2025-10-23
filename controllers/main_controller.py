@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -85,11 +85,20 @@ class MainController(QObject):
     def get_algorithms(self) -> List[Dict[str, str]]:
         return AVAILABLE_ALGORITHMS
 
-    def optimize(self, algorithm_key: str, kerf: float = 0.0, margin: float = 0.0,\n                 allow_rotation: bool = True, priority_weight: float = 0.0) -> None:
+    def optimize(self, algorithm_key: str, kerf: float = 0.0, margin: float = 0.0,
+                 allow_rotation: bool = True, priority_weight: float = 0.0) -> None:
         if not self.model.chapas or not self.model.pecas:
             self.model.clone_with_status("Add sheets and pieces before running optimization")
             return
-        summary, layouts = run_algorithm(\n            algorithm_key,\n            self.model.chapas,\n            self.model.pecas,\n            allow_rotation=allow_rotation,\n            kerf=kerf,\n            margin=margin,\n            priority_weight=priority_weight,\n        )
+        summary, layouts = run_algorithm(
+            algorithm_key,
+            self.model.chapas,
+            self.model.pecas,
+            allow_rotation=allow_rotation,
+            kerf=kerf,
+            margin=margin,
+            priority_weight=priority_weight,
+        )
         self._last_summary = summary
         self.model.set_layouts(layouts, summary)
         self.model.clone_with_status(
@@ -97,15 +106,29 @@ class MainController(QObject):
             f"Utilization {summary.total_utilization:.1f}% | Coverage {summary.piece_coverage:.1f}%"
         )
 
-    def evaluate_best(self, kerf: float = 0.0, margin: float = 0.0,\n                      allow_rotation: bool = True, priority_weight: float = 0.0) -> Optional[OptimizationSummary]:
-        rankings = evaluate_algorithms(\n            self.model.chapas,\n            self.model.pecas,\n            allow_rotation=allow_rotation,\n            kerf=kerf,\n            margin=margin,\n            priority_weight=priority_weight,\n        )
+    def evaluate_best(self, kerf: float = 0.0, margin: float = 0.0,
+                      allow_rotation: bool = True, priority_weight: float = 0.0) -> Optional[OptimizationSummary]:
+        rankings = evaluate_algorithms(
+            self.model.chapas,
+            self.model.pecas,
+            allow_rotation=allow_rotation,
+            kerf=kerf,
+            margin=margin,
+            priority_weight=priority_weight,
+        )
         best = rankings[0] if rankings else None
         if best:
             self.model.clone_with_status(
                 f"Best strategy {best.algorithm.upper()} | "
                 f"Utilization {best.total_utilization:.1f}% | Coverage {best.piece_coverage:.1f}%"
             )
-            self.optimize(\n                best.algorithm,\n                kerf=kerf,\n                margin=margin,\n                allow_rotation=allow_rotation,\n                priority_weight=priority_weight,\n            )
+            self.optimize(
+                best.algorithm,
+                kerf=kerf,
+                margin=margin,
+                allow_rotation=allow_rotation,
+                priority_weight=priority_weight,
+            )
         return best
     # ------------------------------------------------------------------
     # Export
@@ -133,7 +156,15 @@ class MainController(QObject):
     # ------------------------------------------------------------------
     # Accessors for the UI
     # ------------------------------------------------------------------
-    def get_layouts(self) -> List[LayoutResult]:\n        return list(self.model.layouts)\n\n    def get_summary(self) -> Optional[OptimizationSummary]:\n        return self._last_summary or self.model.summary\n\n    def get_not_allocated(self) -> List[Peca]:\n        summary = self.get_summary()\n        return list(summary.not_allocated) if summary else []
+    def get_layouts(self) -> List[LayoutResult]:
+        return list(self.model.layouts)
+
+    def get_summary(self) -> Optional[OptimizationSummary]:
+        return self._last_summary or self.model.summary
+
+    def get_not_allocated(self) -> List[Peca]:
+        summary = self.get_summary()
+        return list(summary.not_allocated) if summary else []
 
     # ------------------------------------------------------------------
     # Internal utilities
